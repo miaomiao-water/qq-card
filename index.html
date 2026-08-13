@@ -181,8 +181,6 @@
       <h1>淼淼热气球</h1>
       <p class="subtitle">点击下方按钮打开 QQ<br>联系淼淼领取热气球
       </p>
-      <p class="qq-number">QQ：<span id="qqNumber"></span></p>
-
       <div class="actions">
         <button class="primary" id="openQQ" type="button">打开 QQ 联系淼淼</button>
         <button class="secondary" id="copyQQ" type="button">复制 QQ 号</button>
@@ -203,12 +201,9 @@
       const QQ_NUMBER = "3694756983";
       const QQ_SCHEME = `mqqapi://card/show_pslcard?src_type=internal&version=1&uin=${encodeURIComponent(QQ_NUMBER)}&card_type=person&source=qrcode`;
 
-      const numberElement = document.getElementById("qqNumber");
       const openButton = document.getElementById("openQQ");
       const copyButton = document.getElementById("copyQQ");
       const notice = document.getElementById("notice");
-
-      numberElement.textContent = QQ_NUMBER;
 
       function showNotice(message, state) {
         notice.textContent = message;
