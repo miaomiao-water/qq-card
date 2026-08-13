@@ -137,6 +137,7 @@
 
     <div class="actions">
       <button class="primary" id="openQQ" type="button">打开 QQ 个人资料</button>
+      <button class="secondary" id="openLegacyQQ" type="button">旧版 QQ 兼容打开</button>
       <button class="secondary" id="copyQQ" type="button">复制 QQ 号</button>
     </div>
 
@@ -153,9 +154,11 @@
       // 以后更换 QQ 号时，只需修改下面这一行。
       const QQ_NUMBER = "3694756983";
       const QQ_SCHEME = `mqqapi://card/show_pslcard?src_type=internal&version=1&uin=${encodeURIComponent(QQ_NUMBER)}&card_type=person&source=qrcode`;
+      const LEGACY_QQ_SCHEME = `mqqwpa://im/chat?chat_type=wpa&uin=${encodeURIComponent(QQ_NUMBER)}&version=1&src_type=web`;
 
       const numberElement = document.getElementById("qqNumber");
       const openButton = document.getElementById("openQQ");
+      const legacyOpenButton = document.getElementById("openLegacyQQ");
       const copyButton = document.getElementById("copyQQ");
       const notice = document.getElementById("notice");
 
@@ -173,6 +176,17 @@
         window.setTimeout(() => {
           if (document.visibilityState === "visible") {
             showNotice("未能打开 QQ？请确认已安装手机 QQ，或复制 QQ 号后在 QQ 内搜索。", "warning");
+          }
+        }, 1600);
+      });
+
+      legacyOpenButton.addEventListener("click", () => {
+        showNotice("正在尝试通过兼容方式打开手机 QQ……", "");
+        window.location.href = LEGACY_QQ_SCHEME;
+
+        window.setTimeout(() => {
+          if (document.visibilityState === "visible") {
+            showNotice("未能打开 QQ？请复制 QQ 号后在 QQ 内搜索，或将 QQ 升级到较新版本。", "warning");
           }
         }, 1600);
       });
