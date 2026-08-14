@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#fff3f8">
-  <title>淼淼热气球领取</title>
-  <meta name="description" content="联系淼淼，领取热气球。">
+  <title>淼淼醇香领取</title>
+  <meta name="description" content="加入 QQ 群，领取淼淼醇香。">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="zh_CN">
-  <meta property="og:title" content="淼淼热气球领取">
-  <meta property="og:description" content="点击页面按钮，打开 QQ 联系淼淼领取热气球。">
+  <meta property="og:title" content="淼淼醇香领取">
+  <meta property="og:description" content="点击页面按钮，打开 QQ 群领取淼淼醇香。">
   <meta property="og:image" content="assets/miaomiao.jpg">
 
   <style>
@@ -103,12 +103,6 @@
       line-height: 1.7;
     }
 
-    .qq-number {
-      margin: 13px 0 20px;
-      color: #a36f85;
-      font-size: 14px;
-    }
-
     .actions {
       display: grid;
       gap: 11px;
@@ -130,6 +124,8 @@
 
     button:active { transform: scale(.98); }
     button:focus-visible { outline: 3px solid rgba(231, 84, 143, .24); outline-offset: 2px; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    button:disabled:active { transform: none; }
 
     .primary {
       color: #fff;
@@ -173,21 +169,21 @@
 <body>
   <main class="card">
     <div class="cover">
-      <img src="assets/miaomiao.jpg" alt="淼淼热气球头像">
+      <img src="assets/miaomiao.jpg" alt="淼淼醇香头像">
     </div>
 
     <section class="content">
-      <div class="tag" aria-label="热气球领取">🎈 热气球领取</div>
-      <h1>淼淼热气球</h1>
-      <p class="subtitle">点击下方按钮打开 QQ<br>联系淼淼领取热气球
+      <div class="tag" aria-label="醇香领取">💗 醇香领取</div>
+      <h1>淼淼醇香</h1>
+      <p class="subtitle">点击下方按钮打开 QQ<br>加入当前群聊领取醇香
       </p>
       <div class="actions">
-        <button class="primary" id="openQQ" type="button">打开 QQ 联系淼淼</button>
-        <button class="secondary" id="copyQQ" type="button">复制 QQ 号</button>
+        <button class="primary" id="openGroup" type="button" disabled>打开 QQ 加群</button>
+        <button class="secondary" id="copyGroup" type="button" disabled>复制群号</button>
       </div>
 
       <p class="notice" id="notice" role="status" aria-live="polite">
-        如果无法打开 QQ，请复制 QQ 号后在 QQ 内搜索。
+        正在获取当前群信息……
       </p>
       <p class="privacy">只有点击按钮时才会尝试打开 QQ</p>
     </section>
@@ -197,12 +193,9 @@
     (() => {
       "use strict";
 
-      // 以后更换 QQ 号时，只需修改下面这一行。
-      const QQ_NUMBER = "3694756983";
-      const QQ_SCHEME = `mqqapi://card/show_pslcard?src_type=internal&version=1&uin=${encodeURIComponent(QQ_NUMBER)}&card_type=person&source=qrcode`;
-
-      const openButton = document.getElementById("openQQ");
-      const copyButton = document.getElementById("copyQQ");
+      let currentGroup = null;
+      const openButton = document.getElementById("openGroup");
+      const copyButton = document.getElementById("copyGroup");
       const notice = document.getElementById("notice");
 
       function showNotice(message, state) {
@@ -210,13 +203,38 @@
         notice.dataset.state = state || "";
       }
 
+      async function loadGroupConfig() {
+        try {
+          const response = await fetch(`./group-config.json?v=${Date.now()}`, { cache: "no-store" });
+          if (!response.ok) throw new Error("config request failed");
+
+          const config = await response.json();
+          const groupNumber = String(config.groupNumber || "").trim();
+          const joinUrl = String(config.joinUrl || "").trim();
+          if (!groupNumber) throw new Error("group number is empty");
+
+          currentGroup = { groupNumber, joinUrl };
+          copyButton.disabled = false;
+
+          if (/^(https?:\/\/|mqqapi:\/\/)/i.test(joinUrl)) {
+            openButton.disabled = false;
+            showNotice("当前群信息已更新，可直接打开 QQ 加群。", "success");
+          } else {
+            showNotice("当前群号已更新，请复制群号后在 QQ 内搜索。", "warning");
+          }
+        } catch (_) {
+          showNotice("暂未获取到当前群信息，请稍后重试。", "warning");
+        }
+      }
+
       openButton.addEventListener("click", () => {
+        if (!currentGroup || !currentGroup.joinUrl) return;
         showNotice("正在尝试打开手机 QQ……", "");
-        window.location.href = QQ_SCHEME;
+        window.location.href = currentGroup.joinUrl;
 
         window.setTimeout(() => {
           if (document.visibilityState === "visible") {
-            showNotice("未能打开 QQ？请复制 QQ 号后在 QQ 内搜索，或将 QQ 升级到较新版本。", "warning");
+            showNotice("未能打开 QQ？请复制群号后在 QQ 内搜索。", "warning");
           }
         }, 1600);
       });
@@ -243,13 +261,16 @@
       }
 
       copyButton.addEventListener("click", async () => {
+        if (!currentGroup) return;
         try {
-          await copyWithFallback(QQ_NUMBER);
-          showNotice(`QQ 号 ${QQ_NUMBER} 已复制，请打开 QQ 搜索联系。`, "success");
+          await copyWithFallback(currentGroup.groupNumber);
+          showNotice("群号已复制，请打开 QQ 搜索加群。", "success");
         } catch (_) {
-          showNotice(`复制失败，请长按或手动记录 QQ 号：${QQ_NUMBER}`, "warning");
+          showNotice(`复制失败，请手动记录群号：${currentGroup.groupNumber}`, "warning");
         }
       });
+
+      loadGroupConfig();
     })();
   </script>
 </body>
